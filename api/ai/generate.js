@@ -29,7 +29,7 @@ export default async function handler(req, res) {
     });
 
     const createData = await createRes.json();
-    if (!createData.id) return error(res, createData.error || createData.message || JSON.stringify(createData));
+    if (!createData.id) return error(res, JSON.stringify(createData));
 
     const taskId = createData.id;
     let attempts = 0;
