@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   const fullPrompt = [prompt, shotText].filter(Boolean).join('. ').substring(0, 512);
 
   try {
-    const createRes = await fetch('https://api.dev.runwayml.com/v1/text_to_video', {
+    const createRes = await fetch('https://api.dev.runwayml.com/v1/image_to_video', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
