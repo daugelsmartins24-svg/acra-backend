@@ -1,40 +1,64 @@
-// /api/ai/generate.js
-// Handles all AI content generation via Anthropic
-
+// /api/video/generate.js
 import { cors, error, ok } from '../_helpers.js';
 
 export default async function handler(req, res) {
   if (cors(req, res)) return;
   if (req.method !== 'POST') return error(res, 'Method not allowed', 405);
 
-  const { prompt, system, history, anthropicKey, count } = req.body;
-  if (!anthropicKey) return error(res, 'Anthropic API key required');
+  const { prompt, storyboard, runwayKey } = req.body;
+  if (!runwayKey) return error(res, 'Runway ML API key is required');
+  if (!prompt) return error(res, 'Prompt is required');
+
+  const shotText = storyboard?.map(s => s.desc).join('. ') || '';
+  const fullPrompt = [prompt, shotText].filter(Boolean).join('. ').substring(0, 512);
 
   try {
-    const messages = history?.length ? history : [{ role: 'user', content: prompt }];
-
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const createRes = await fetch('https://api.dev.runwayml.com/v1/text_to_video', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': anthropicKey,
-        'anthropic-version': '2023-06-01'
+        'Authorization': `Bearer ${runwayKey}`,
+        'X-Runway-Version': '2024-11-06'
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: count > 1 ? 3000 : 1500,
-        system: system || 'You are ARCA, an AI marketing engine.',
-        messages: messages.slice(-12)
+        model: 'kling3.0_standard',
+        promptText: fullPrompt,
+        duration: 10,
+        ratio: '720:1280'
       })
     });
 
-    const data = await response.json();
+    const createData = await createRes.json();
+    if (!createData.id) return error(res, createData.error || createData.message || 'Runway task creation failed');
 
-    if (data.error) return error(res, data.error.message);
-    if (!data.content?.[0]?.text) return error(res, 'No response from AI');
+    const taskId = createData.id;
+    let attempts = 0;
 
-    return ok(res, { reply: data.content[0].text });
+    while (attempts < 36) {
+      await new Promise(r => setTimeout(r, 5000));
+      attempts++;
 
+      const pollRes = await fetch(`https://api.dev.runwayml.com/v1/tasks/${taskId}`, {
+        headers: {
+          'Authorization': `Bearer ${runwayKey}`,
+          'X-Runway-Version': '2024-11-06'
+        }
+      });
+
+      const pollData = await pollRes.json();
+
+      if (pollData.status === 'SUCCEEDED') {
+        const videoUrl = pollData.output?.[0];
+        if (!videoUrl) return error(res, 'Video generated but no URL returned');
+        return ok(res, { videoUrl, taskId });
+      }
+
+      if (pollData.status === 'FAILED') {
+        return error(res, 'Runway generation failed: ' + (pollData.failure || 'unknown'));
+      }
+    }
+
+    return error(res, 'Video generation timed out');
   } catch (e) {
     return error(res, 'Server error: ' + e.message, 500);
   }
