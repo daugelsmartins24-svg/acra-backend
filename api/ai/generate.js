@@ -24,7 +24,7 @@ export default async function handler(req, res) {
         model: 'gen4_turbo',
         promptText: fullPrompt,
         duration: 5,
-        ratio: '720:1280'
+        ratio: '9:16'
       })
     });
 
