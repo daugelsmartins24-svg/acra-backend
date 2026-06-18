@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   const fullPrompt = [prompt, shotText].filter(Boolean).join('. ').substring(0, 512);
 
   try {
-    const createRes = await fetch('https://api.dev.runwayml.com/v1/image_to_video', {
+    const createRes = await fetch('https://api.dev.runwayml.com/v1/text_to_video', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -21,10 +21,10 @@ export default async function handler(req, res) {
         'X-Runway-Version': '2024-11-06'
       },
       body: JSON.stringify({
-        model: 'gen4.5',
+        model: 'seedance2',
         promptText: fullPrompt,
         duration: 5,
-        ratio: '720:1280'
+        ratio: '9:16'
       })
     });
 
