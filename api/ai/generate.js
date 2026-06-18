@@ -21,15 +21,15 @@ export default async function handler(req, res) {
         'X-Runway-Version': '2024-11-06'
       },
       body: JSON.stringify({
-        model: 'kling3.0_standard',
+        model: 'gen4_turbo',
         promptText: fullPrompt,
-        duration: 10,
+        duration: 5,
         ratio: '720:1280'
       })
     });
 
     const createData = await createRes.json();
-    if (!createData.id) return error(res, createData.error || createData.message || 'Runway task creation failed');
+    if (!createData.id) return error(res, createData.error || createData.message || JSON.stringify(createData));
 
     const taskId = createData.id;
     let attempts = 0;
