@@ -1,16 +1,1 @@
-{
-  "name": "arca-backend",
-  "version": "1.0.0",
-  "description": "ARCA AI Marketing Platform — Backend API",
-  "main": "index.js",
-  "scripts": {
-    "dev": "vercel dev",
-    "deploy": "vercel --prod"
-  },
-  "dependencies": {
-    "node-fetch": "^3.3.2"
-  },
-  "engines": {
-    "node": "18.x"
-  }
-}
+{"name":"arca-backend","version":"1.0.0","engines":{"node":"20.x"}}
